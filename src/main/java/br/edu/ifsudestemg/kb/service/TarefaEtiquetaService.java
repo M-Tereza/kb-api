@@ -110,8 +110,8 @@ public class TarefaEtiquetaService {
 
     public void validarPertencemAoMesmoProjeto(Tarefa tarefa, Etiqueta etiqueta) {
         Long projetoTarefaId;
-        if (tarefa.getProjeto() != null) {
-            projetoTarefaId = tarefa.getProjeto().getId();
+        if (tarefa.getFase() != null && tarefa.getFase().getProjeto() != null) {
+            projetoTarefaId = tarefa.getFase().getProjeto().getId();
         } else {
             projetoTarefaId = null;
         }

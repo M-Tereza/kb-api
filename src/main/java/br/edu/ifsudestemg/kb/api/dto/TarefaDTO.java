@@ -53,13 +53,13 @@ public class TarefaDTO {
         }
         ModelMapper modelMapper = new ModelMapper();
         TarefaDTO dto = modelMapper.map(entity, TarefaDTO.class);
-        if (entity.getProjeto() != null) {
-            dto.setIdProjeto(entity.getProjeto().getId());
-            dto.setTituloProjeto(entity.getProjeto().getTitulo());
-        }
         if (entity.getFase() != null) {
             dto.setIdFase(entity.getFase().getId());
             dto.setNomeFase(entity.getFase().getNome());
+            if (entity.getFase().getProjeto() != null) {
+                dto.setIdProjeto(entity.getFase().getProjeto().getId());
+                dto.setTituloProjeto(entity.getFase().getProjeto().getTitulo());
+            }
         }
         if (entity.getPrioridade() != null) {
             dto.setIdPrioridade(entity.getPrioridade().getId());

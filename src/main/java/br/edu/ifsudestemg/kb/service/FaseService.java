@@ -62,7 +62,7 @@ public class FaseService {
         validar(dados);
 
         Projeto projeto;
-        if (dados.getProjeto() != null) {
+        if (dados.getProjeto() != null && dados.getProjeto().getId() != null) {
             projeto = buscarProjetoVinculado(dados.getProjeto());
         } else {
             projeto = existente.getProjeto();

@@ -4,13 +4,11 @@ import br.edu.ifsudestemg.kb.exception.RegraNegocioException;
 import br.edu.ifsudestemg.kb.model.entity.AreaProjeto;
 import br.edu.ifsudestemg.kb.model.entity.Fase;
 import br.edu.ifsudestemg.kb.model.entity.Projeto;
-import br.edu.ifsudestemg.kb.model.entity.Tarefa;
 import br.edu.ifsudestemg.kb.model.repository.AreaProjetoRepository;
 import br.edu.ifsudestemg.kb.model.repository.EtiquetaRepository;
 import br.edu.ifsudestemg.kb.model.repository.FaseRepository;
 import br.edu.ifsudestemg.kb.model.repository.FuncionarioProjetoRepository;
 import br.edu.ifsudestemg.kb.model.repository.ProjetoRepository;
-import br.edu.ifsudestemg.kb.model.repository.TarefaRepository;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,13 +18,14 @@ import java.util.List;
 @Service
 public class ProjetoService {
 
+    private static final int TAMANHO_MAXIMO_DESCRICAO = 500;
+
     private final ProjetoRepository projetoRepository;
     private final AreaProjetoRepository areaProjetoRepository;
     private final FaseRepository faseRepository;
     private final EtiquetaRepository etiquetaRepository;
     private final FuncionarioProjetoRepository funcionarioProjetoRepository;
-    private final TarefaRepository tarefaRepository;
-    private final TarefaService tarefaService;
+    private final FaseService faseService;
 
     public ProjetoService(
             ProjetoRepository projetoRepository,
@@ -34,16 +33,14 @@ public class ProjetoService {
             FaseRepository faseRepository,
             EtiquetaRepository etiquetaRepository,
             FuncionarioProjetoRepository funcionarioProjetoRepository,
-            TarefaRepository tarefaRepository,
-            @Lazy TarefaService tarefaService
+            @Lazy FaseService faseService
     ) {
         this.projetoRepository = projetoRepository;
         this.areaProjetoRepository = areaProjetoRepository;
         this.faseRepository = faseRepository;
         this.etiquetaRepository = etiquetaRepository;
         this.funcionarioProjetoRepository = funcionarioProjetoRepository;
-        this.tarefaRepository = tarefaRepository;
-        this.tarefaService = tarefaService;
+        this.faseService = faseService;
     }
 
     public List<Projeto> listarTodos() {
@@ -85,13 +82,12 @@ public class ProjetoService {
     public void excluir(Long id) {
         Projeto existente = buscarPorId(id);
 
-        List<Tarefa> tarefas = tarefaRepository.findByProjetoId(id);
-        for (Tarefa tarefa : tarefas) {
-            tarefaService.excluir(tarefa.getId());
+        List<Fase> fases = faseRepository.findByProjetoIdOrderByOrdemAsc(id);
+        for (Fase fase : fases) {
+            faseService.excluir(fase.getId(), true);
         }
 
         etiquetaRepository.deleteByProjetoId(id);
-        faseRepository.deleteByProjetoId(id);
         funcionarioProjetoRepository.deleteByProjetoId(id);
         projetoRepository.delete(existente);
     }
@@ -103,8 +99,8 @@ public class ProjetoService {
         if (projeto.getTitulo() == null || projeto.getTitulo().trim().isEmpty()) {
             throw new RegraNegocioException("O título do projeto é obrigatório.");
         }
-        if (projeto.getDescricao() != null && projeto.getDescricao().trim().length() > 500) {
-            throw new RegraNegocioException("A descrição do projeto deve ter no máximo 500 caracteres.");
+        if (projeto.getDescricao() != null && projeto.getDescricao().trim().length() > TAMANHO_MAXIMO_DESCRICAO) {
+            throw new RegraNegocioException("A descrição do projeto deve ter no máximo " + TAMANHO_MAXIMO_DESCRICAO + " caracteres.");
         }
     }
 
@@ -118,7 +114,11 @@ public class ProjetoService {
 
     public String trimOuNulo(String valor) {
         if (valor != null) {
-            return valor.trim();
+            String trimmed = valor.trim();
+            if (trimmed.isEmpty()) {
+                return null;
+            }
+            return trimmed;
         } else {
             return null;
         }

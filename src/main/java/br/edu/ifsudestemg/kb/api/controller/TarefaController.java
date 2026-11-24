@@ -4,7 +4,6 @@ import br.edu.ifsudestemg.kb.api.dto.TarefaDTO;
 import br.edu.ifsudestemg.kb.exception.RegraNegocioException;
 import br.edu.ifsudestemg.kb.model.entity.Fase;
 import br.edu.ifsudestemg.kb.model.entity.Prioridade;
-import br.edu.ifsudestemg.kb.model.entity.Projeto;
 import br.edu.ifsudestemg.kb.model.entity.Tarefa;
 import br.edu.ifsudestemg.kb.service.TarefaService;
 import io.swagger.annotations.ApiOperation;
@@ -142,14 +141,6 @@ public class TarefaController {
         ModelMapper modelMapper = new ModelMapper();
         Tarefa entidade = modelMapper.map(dto, Tarefa.class);
         entidade.setId(null);
-
-        if (dto.getIdProjeto() != null) {
-            Projeto projeto = new Projeto();
-            projeto.setId(dto.getIdProjeto());
-            entidade.setProjeto(projeto);
-        } else {
-            entidade.setProjeto(null);
-        }
 
         if (dto.getIdFase() != null) {
             Fase fase = new Fase();

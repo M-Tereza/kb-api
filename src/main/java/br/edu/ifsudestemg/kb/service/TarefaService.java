@@ -3,12 +3,10 @@ package br.edu.ifsudestemg.kb.service;
 import br.edu.ifsudestemg.kb.exception.RegraNegocioException;
 import br.edu.ifsudestemg.kb.model.entity.Fase;
 import br.edu.ifsudestemg.kb.model.entity.Prioridade;
-import br.edu.ifsudestemg.kb.model.entity.Projeto;
 import br.edu.ifsudestemg.kb.model.entity.Tarefa;
 import br.edu.ifsudestemg.kb.model.repository.AnotacaoRepository;
 import br.edu.ifsudestemg.kb.model.repository.FaseRepository;
 import br.edu.ifsudestemg.kb.model.repository.PrioridadeRepository;
-import br.edu.ifsudestemg.kb.model.repository.ProjetoRepository;
 import br.edu.ifsudestemg.kb.model.repository.ResponsavelTarefaRepository;
 import br.edu.ifsudestemg.kb.model.repository.TarefaEtiquetaRepository;
 import br.edu.ifsudestemg.kb.model.repository.TarefaRepository;
@@ -25,7 +23,6 @@ public class TarefaService {
     private static final int TAMANHO_MAXIMO_DESCRICAO = 500;
 
     private final TarefaRepository tarefaRepository;
-    private final ProjetoRepository projetoRepository;
     private final FaseRepository faseRepository;
     private final PrioridadeRepository prioridadeRepository;
     private final AnotacaoRepository anotacaoRepository;
@@ -34,7 +31,6 @@ public class TarefaService {
 
     public TarefaService(
             TarefaRepository tarefaRepository,
-            ProjetoRepository projetoRepository,
             FaseRepository faseRepository,
             PrioridadeRepository prioridadeRepository,
             AnotacaoRepository anotacaoRepository,
@@ -42,7 +38,6 @@ public class TarefaService {
             TarefaEtiquetaRepository tarefaEtiquetaRepository
     ) {
         this.tarefaRepository = tarefaRepository;
-        this.projetoRepository = projetoRepository;
         this.faseRepository = faseRepository;
         this.prioridadeRepository = prioridadeRepository;
         this.anotacaoRepository = anotacaoRepository;
@@ -55,7 +50,7 @@ public class TarefaService {
     }
 
     public List<Tarefa> listarPorProjeto(Long projetoId) {
-        return tarefaRepository.findByProjetoId(projetoId);
+        return tarefaRepository.findByFaseProjetoId(projetoId);
     }
 
     public List<Tarefa> listarPorFase(Long faseId) {
@@ -70,17 +65,14 @@ public class TarefaService {
     @Transactional
     public Tarefa salvar(Tarefa tarefa) {
         validar(tarefa);
-        Projeto projeto = buscarProjetoVinculado(tarefa.getProjeto());
         Fase fase = buscarFaseVinculada(tarefa.getFase());
-        Prioridade prioridade = buscarPrioridadeVinculada(tarefa.getPrioridade());
-        validarPertenciaFaseAoProjeto(fase, projeto);
+        Prioridade prioridade = buscarPrioridadeOpcional(tarefa.getPrioridade());
 
         tarefa.setTitulo(tarefa.getTitulo().trim());
         tarefa.setDescricao(trimOuNulo(tarefa.getDescricao()));
         if (tarefa.getDataCriacao() == null) {
             tarefa.setDataCriacao(Instant.now());
         }
-        tarefa.setProjeto(projeto);
         tarefa.setFase(fase);
         tarefa.setPrioridade(prioridade);
         return tarefaRepository.save(tarefa);
@@ -90,15 +82,12 @@ public class TarefaService {
     public Tarefa atualizar(Long id, Tarefa dados) {
         Tarefa existente = buscarPorId(id);
         validar(dados);
-        Projeto projeto = buscarProjetoVinculado(dados.getProjeto());
         Fase fase = buscarFaseVinculada(dados.getFase());
-        Prioridade prioridade = buscarPrioridadeVinculada(dados.getPrioridade());
-        validarPertenciaFaseAoProjeto(fase, projeto);
+        Prioridade prioridade = buscarPrioridadeOpcional(dados.getPrioridade());
 
         existente.setTitulo(dados.getTitulo().trim());
         existente.setDescricao(trimOuNulo(dados.getDescricao()));
         existente.setDataLimite(dados.getDataLimite());
-        existente.setProjeto(projeto);
         existente.setFase(fase);
         existente.setPrioridade(prioridade);
         return tarefaRepository.save(existente);
@@ -127,16 +116,8 @@ public class TarefaService {
         if (tituloTrimmed.length() > TAMANHO_MAXIMO_TITULO) {
             throw new RegraNegocioException("O título da tarefa deve ter no máximo " + TAMANHO_MAXIMO_TITULO + " caracteres.");
         }
-        if (tarefa.getDescricao() != null) {
-            if (tarefa.getDescricao().trim().length() > TAMANHO_MAXIMO_DESCRICAO) {
-                throw new RegraNegocioException("A descrição da tarefa deve ter no máximo " + TAMANHO_MAXIMO_DESCRICAO + " caracteres.");
-            }
-        }
-        if (tarefa.getProjeto() == null) {
-            throw new RegraNegocioException("O projeto da tarefa é obrigatório.");
-        }
-        if (tarefa.getProjeto().getId() == null) {
-            throw new RegraNegocioException("O identificador do projeto da tarefa é obrigatório.");
+        if (tarefa.getDescricao() != null && tarefa.getDescricao().trim().length() > TAMANHO_MAXIMO_DESCRICAO) {
+            throw new RegraNegocioException("A descrição da tarefa deve ter no máximo " + TAMANHO_MAXIMO_DESCRICAO + " caracteres.");
         }
         if (tarefa.getFase() == null) {
             throw new RegraNegocioException("A fase da tarefa é obrigatória.");
@@ -144,24 +125,16 @@ public class TarefaService {
         if (tarefa.getFase().getId() == null) {
             throw new RegraNegocioException("O identificador da fase da tarefa é obrigatório.");
         }
-        if (tarefa.getPrioridade() == null) {
-            throw new RegraNegocioException("A prioridade da tarefa é obrigatória.");
-        }
-        if (tarefa.getPrioridade().getId() == null) {
+        if (tarefa.getPrioridade() != null && tarefa.getPrioridade().getId() == null) {
             throw new RegraNegocioException("O identificador da prioridade da tarefa é obrigatório.");
         }
         if (tarefa.getDataCriacao() != null && tarefa.getDataLimite() != null
                 && tarefa.getDataLimite().isBefore(tarefa.getDataCriacao())) {
             throw new RegraNegocioException("A data limite não pode ser anterior à data de criação.");
         }
-    }
-
-    public Projeto buscarProjetoVinculado(Projeto projeto) {
-        if (projeto == null || projeto.getId() == null) {
-            throw new RegraNegocioException("O projeto da tarefa é obrigatório.");
+        if (tarefa.getDataLimite() != null && tarefa.getDataLimite().isBefore(Instant.now())) {
+            throw new RegraNegocioException("A data limite não pode estar no passado.");
         }
-        return projetoRepository.findById(projeto.getId())
-                .orElseThrow(() -> new RegraNegocioException("Projeto informado não encontrado."));
     }
 
     public Fase buscarFaseVinculada(Fase fase) {
@@ -172,9 +145,9 @@ public class TarefaService {
                 .orElseThrow(() -> new RegraNegocioException("Fase informada não encontrada."));
     }
 
-    public Prioridade buscarPrioridadeVinculada(Prioridade prioridade) {
+    public Prioridade buscarPrioridadeOpcional(Prioridade prioridade) {
         if (prioridade == null || prioridade.getId() == null) {
-            throw new RegraNegocioException("A prioridade da tarefa é obrigatória.");
+            return null;
         }
         return prioridadeRepository.findById(prioridade.getId())
                 .orElseThrow(() -> new RegraNegocioException("Prioridade informada não encontrada."));
@@ -182,15 +155,13 @@ public class TarefaService {
 
     public String trimOuNulo(String valor) {
         if (valor != null) {
-            return valor.trim();
+            String trimmed = valor.trim();
+            if (trimmed.isEmpty()) {
+                return null;
+            }
+            return trimmed;
         } else {
             return null;
-        }
-    }
-
-    public void validarPertenciaFaseAoProjeto(Fase fase, Projeto projeto) {
-        if (fase.getProjeto() == null || !fase.getProjeto().getId().equals(projeto.getId())) {
-            throw new RegraNegocioException("A fase informada não pertence ao projeto da tarefa.");
         }
     }
 }

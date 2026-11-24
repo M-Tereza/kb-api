@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.time.Instant;
-import java.time.LocalDate;
 
 @Entity
 @Table(name = "tarefa")
@@ -30,10 +29,6 @@ public class Tarefa {
 
     @Column(name = "data_limite")
     private Instant dataLimite;
-
-    @ManyToOne
-    @JoinColumn(name = "id_projeto", nullable = false)
-    private Projeto projeto;
 
     @ManyToOne
     @JoinColumn(name = "id_fase", nullable = false)

@@ -7,11 +7,11 @@ import java.util.List;
 
 public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
 
-    List<Tarefa> findByProjetoId(Long projetoId);
+    List<Tarefa> findByFaseProjetoId(Long projetoId);
 
     List<Tarefa> findByFaseId(Long faseId);
 
-    void deleteByProjetoId(Long projetoId);
+    void deleteByFaseProjetoId(Long projetoId);
 
     void deleteByFaseId(Long faseId);
 }
