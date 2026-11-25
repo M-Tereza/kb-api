@@ -7,12 +7,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class PrioridadeService {
 
     private static final int TAMANHO_MINIMO_NOME = 2;
     private static final int TAMANHO_MAXIMO_NOME = 60;
+    private static final String COR_PADRAO = "#3B82F6";
+    private static final String REGEX_COR_HEX = "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$";
 
     private final PrioridadeRepository prioridadeRepository;
 
@@ -33,6 +36,7 @@ public class PrioridadeService {
     public Prioridade salvar(Prioridade prioridade) {
         validar(prioridade);
         prioridade.setNome(prioridade.getNome().trim());
+        prioridade.setCor(normalizarCor(prioridade.getCor()));
         return prioridadeRepository.save(prioridade);
     }
 
@@ -41,6 +45,7 @@ public class PrioridadeService {
         Prioridade existente = buscarPorId(id);
         validar(dados);
         existente.setNome(dados.getNome().trim());
+        existente.setCor(normalizarCor(dados.getCor()));
         return prioridadeRepository.save(existente);
     }
 
@@ -67,5 +72,18 @@ public class PrioridadeService {
         if (nomeTrimmed.length() > TAMANHO_MAXIMO_NOME) {
             throw new RegraNegocioException("O nome da prioridade deve ter no máximo " + TAMANHO_MAXIMO_NOME + " caracteres.");
         }
+        if (prioridade.getCor() != null && !prioridade.getCor().trim().isEmpty()) {
+            String corTrimmed = prioridade.getCor().trim();
+            if (!corTrimmed.matches(REGEX_COR_HEX)) {
+                throw new RegraNegocioException("A cor da prioridade deve estar no formato hexadecimal (ex: #3B82F6).");
+            }
+        }
+    }
+
+    public String normalizarCor(String valor) {
+        if (valor == null || valor.trim().isEmpty()) {
+            return COR_PADRAO;
+        }
+        return valor.trim().toUpperCase(Locale.ROOT);
     }
 }

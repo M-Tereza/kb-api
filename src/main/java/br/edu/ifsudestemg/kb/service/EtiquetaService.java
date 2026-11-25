@@ -10,13 +10,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class EtiquetaService {
 
     private static final int TAMANHO_MINIMO_NOME = 2;
     private static final int TAMANHO_MAXIMO_NOME = 80;
-    private static final int TAMANHO_MAXIMO_COR = 30;
+    private static final String COR_PADRAO = "#3B82F6";
+    private static final String REGEX_COR_HEX = "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$";
 
     private final EtiquetaRepository etiquetaRepository;
     private final ProjetoRepository projetoRepository;
@@ -47,7 +49,7 @@ public class EtiquetaService {
         Projeto projeto = buscarProjetoVinculado(etiqueta.getProjeto());
 
         etiqueta.setNome(etiqueta.getNome().trim());
-        etiqueta.setCor(trimOuNulo(etiqueta.getCor()));
+        etiqueta.setCor(normalizarCor(etiqueta.getCor()));
         etiqueta.setProjeto(projeto);
         return etiquetaRepository.save(etiqueta);
     }
@@ -65,7 +67,7 @@ public class EtiquetaService {
         }
 
         existente.setNome(dados.getNome().trim());
-        existente.setCor(trimOuNulo(dados.getCor()));
+        existente.setCor(normalizarCor(dados.getCor()));
         existente.setProjeto(projeto);
         return etiquetaRepository.save(existente);
     }
@@ -94,8 +96,11 @@ public class EtiquetaService {
         if (nomeTrimmed.length() > TAMANHO_MAXIMO_NOME) {
             throw new RegraNegocioException("O nome da etiqueta deve ter no máximo " + TAMANHO_MAXIMO_NOME + " caracteres.");
         }
-        if (etiqueta.getCor() != null && etiqueta.getCor().trim().length() > TAMANHO_MAXIMO_COR) {
-            throw new RegraNegocioException("A cor da etiqueta deve ter no máximo " + TAMANHO_MAXIMO_COR + " caracteres.");
+        if (etiqueta.getCor() != null && !etiqueta.getCor().trim().isEmpty()) {
+            String corTrimmed = etiqueta.getCor().trim();
+            if (!corTrimmed.matches(REGEX_COR_HEX)) {
+                throw new RegraNegocioException("A cor da etiqueta deve estar no formato hexadecimal (ex: #3B82F6).");
+            }
         }
     }
 
@@ -107,15 +112,10 @@ public class EtiquetaService {
                 .orElseThrow(() -> new RegraNegocioException("Projeto informado não encontrado."));
     }
 
-    public String trimOuNulo(String valor) {
-        if (valor != null) {
-            String trimmed = valor.trim();
-            if (trimmed.isEmpty()) {
-                return null;
-            }
-            return trimmed;
-        } else {
-            return null;
+    public String normalizarCor(String valor) {
+        if (valor == null || valor.trim().isEmpty()) {
+            return COR_PADRAO;
         }
+        return valor.trim().toUpperCase(Locale.ROOT);
     }
 }

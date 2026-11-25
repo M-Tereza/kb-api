@@ -18,6 +18,9 @@ public class PrioridadeDTO {
     @ApiModelProperty(value = "Nome da prioridade", example = "Alta", required = true, position = 2)
     private String nome;
 
+    @ApiModelProperty(value = "Cor da prioridade (hexadecimal)", example = "#3B82F6", position = 3)
+    private String cor;
+
     public static PrioridadeDTO create(Prioridade entity) {
         if (entity == null) {
             return null;

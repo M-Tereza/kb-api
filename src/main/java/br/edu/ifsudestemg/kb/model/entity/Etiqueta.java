@@ -20,7 +20,7 @@ public class Etiqueta {
     @Column(nullable = false, length = 80)
     private String nome;
 
-    @Column(length = 30)
+    @Column(nullable = false, length = 7)
     private String cor;
 
     @ManyToOne

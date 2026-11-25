@@ -47,6 +47,9 @@ public class TarefaDTO {
     @ApiModelProperty(value = "Nome da prioridade vinculada (retornado na consulta)", example = "Alta", readOnly = true, position = 11)
     private String nomePrioridade;
 
+    @ApiModelProperty(value = "Cor da prioridade vinculada (retornado na consulta)", example = "#3B82F6", readOnly = true, position = 12)
+    private String corPrioridade;
+
     public static TarefaDTO create(Tarefa entity) {
         if (entity == null) {
             return null;
@@ -64,6 +67,7 @@ public class TarefaDTO {
         if (entity.getPrioridade() != null) {
             dto.setIdPrioridade(entity.getPrioridade().getId());
             dto.setNomePrioridade(entity.getPrioridade().getNome());
+            dto.setCorPrioridade(entity.getPrioridade().getCor());
         }
         return dto;
     }
