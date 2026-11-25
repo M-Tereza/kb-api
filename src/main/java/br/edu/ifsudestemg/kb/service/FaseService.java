@@ -96,6 +96,7 @@ public class FaseService {
     @Transactional
     public void excluir(Long id, boolean confirmarExclusaoTarefas) {
         Fase existente = buscarPorId(id);
+        Long projetoId = existente.getProjeto().getId();
         List<Tarefa> tarefasNaFase = tarefaRepository.findByFaseId(id);
 
         if (!tarefasNaFase.isEmpty() && !confirmarExclusaoTarefas) {
@@ -107,7 +108,29 @@ public class FaseService {
         for (Tarefa tarefa : tarefasNaFase) {
             tarefaService.excluir(tarefa.getId());
         }
+
         faseRepository.delete(existente);
+        faseRepository.flush();
+
+        recalcularOrdemFases(projetoId);
+    }
+
+    @Transactional
+    public void recalcularOrdemFases(Long projetoId) {
+        List<Fase> fasesRestantes = faseRepository.findByProjetoIdOrderByOrdemAsc(projetoId);
+        if (fasesRestantes.isEmpty()) {
+            return;
+        }
+
+        for (int i = 0; i < fasesRestantes.size(); i++) {
+            fasesRestantes.get(i).setOrdem(-(i + 1));
+        }
+        faseRepository.saveAllAndFlush(fasesRestantes);
+
+        for (int i = 0; i < fasesRestantes.size(); i++) {
+            fasesRestantes.get(i).setOrdem(i + 1);
+        }
+        faseRepository.saveAllAndFlush(fasesRestantes);
     }
 
     public void validar(Fase fase) {
