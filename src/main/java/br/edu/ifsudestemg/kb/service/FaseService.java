@@ -16,6 +16,9 @@ import java.util.List;
 @Service
 public class FaseService {
 
+    private static final int TAMANHO_MINIMO_NOME = 2;
+    private static final int TAMANHO_MAXIMO_NOME = 60;
+
     private final FaseRepository faseRepository;
     private final ProjetoRepository projetoRepository;
     private final TarefaRepository tarefaRepository;
@@ -111,11 +114,18 @@ public class FaseService {
         if (fase == null) {
             throw new RegraNegocioException("Dados da fase são obrigatórios.");
         }
-        if (fase.getNome() == null || fase.getNome().trim().isEmpty()) {
+        if (fase.getNome() == null) {
             throw new RegraNegocioException("O nome da fase é obrigatório.");
         }
-        if (fase.getNome().trim().length() > 60) {
-            throw new RegraNegocioException("O nome da fase deve ter no máximo 60 caracteres.");
+        String nomeTrimmed = fase.getNome().trim();
+        if (nomeTrimmed.isEmpty()) {
+            throw new RegraNegocioException("O nome da fase não pode estar em branco.");
+        }
+        if (nomeTrimmed.length() < TAMANHO_MINIMO_NOME) {
+            throw new RegraNegocioException("O nome da fase deve ter pelo menos " + TAMANHO_MINIMO_NOME + " caracteres.");
+        }
+        if (nomeTrimmed.length() > TAMANHO_MAXIMO_NOME) {
+            throw new RegraNegocioException("O nome da fase deve ter no máximo " + TAMANHO_MAXIMO_NOME + " caracteres.");
         }
         if (fase.getOrdem() == null || fase.getOrdem() < 1) {
             throw new RegraNegocioException("A ordem da fase é obrigatória e deve ser maior ou igual a 1.");

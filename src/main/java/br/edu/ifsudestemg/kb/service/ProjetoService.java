@@ -18,6 +18,8 @@ import java.util.List;
 @Service
 public class ProjetoService {
 
+    private static final int TAMANHO_MINIMO_TITULO = 2;
+    private static final int TAMANHO_MAXIMO_TITULO = 120;
     private static final int TAMANHO_MAXIMO_DESCRICAO = 500;
 
     private final ProjetoRepository projetoRepository;
@@ -96,8 +98,18 @@ public class ProjetoService {
         if (projeto == null) {
             throw new RegraNegocioException("Dados do projeto são obrigatórios.");
         }
-        if (projeto.getTitulo() == null || projeto.getTitulo().trim().isEmpty()) {
+        if (projeto.getTitulo() == null) {
             throw new RegraNegocioException("O título do projeto é obrigatório.");
+        }
+        String tituloTrimmed = projeto.getTitulo().trim();
+        if (tituloTrimmed.isEmpty()) {
+            throw new RegraNegocioException("O título do projeto não pode estar em branco.");
+        }
+        if (tituloTrimmed.length() < TAMANHO_MINIMO_TITULO) {
+            throw new RegraNegocioException("O título do projeto deve ter pelo menos " + TAMANHO_MINIMO_TITULO + " caracteres.");
+        }
+        if (tituloTrimmed.length() > TAMANHO_MAXIMO_TITULO) {
+            throw new RegraNegocioException("O título do projeto deve ter no máximo " + TAMANHO_MAXIMO_TITULO + " caracteres.");
         }
         if (projeto.getDescricao() != null && projeto.getDescricao().trim().length() > TAMANHO_MAXIMO_DESCRICAO) {
             throw new RegraNegocioException("A descrição do projeto deve ter no máximo " + TAMANHO_MAXIMO_DESCRICAO + " caracteres.");

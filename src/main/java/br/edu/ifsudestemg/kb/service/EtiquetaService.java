@@ -14,6 +14,10 @@ import java.util.List;
 @Service
 public class EtiquetaService {
 
+    private static final int TAMANHO_MINIMO_NOME = 2;
+    private static final int TAMANHO_MAXIMO_NOME = 80;
+    private static final int TAMANHO_MAXIMO_COR = 30;
+
     private final EtiquetaRepository etiquetaRepository;
     private final ProjetoRepository projetoRepository;
     private final TarefaEtiquetaRepository tarefaEtiquetaRepository;
@@ -77,8 +81,21 @@ public class EtiquetaService {
         if (etiqueta == null) {
             throw new RegraNegocioException("Dados da etiqueta são obrigatórios.");
         }
-        if (etiqueta.getNome() == null || etiqueta.getNome().trim().isEmpty()) {
+        if (etiqueta.getNome() == null) {
             throw new RegraNegocioException("O nome da etiqueta é obrigatório.");
+        }
+        String nomeTrimmed = etiqueta.getNome().trim();
+        if (nomeTrimmed.isEmpty()) {
+            throw new RegraNegocioException("O nome da etiqueta não pode estar em branco.");
+        }
+        if (nomeTrimmed.length() < TAMANHO_MINIMO_NOME) {
+            throw new RegraNegocioException("O nome da etiqueta deve ter pelo menos " + TAMANHO_MINIMO_NOME + " caracteres.");
+        }
+        if (nomeTrimmed.length() > TAMANHO_MAXIMO_NOME) {
+            throw new RegraNegocioException("O nome da etiqueta deve ter no máximo " + TAMANHO_MAXIMO_NOME + " caracteres.");
+        }
+        if (etiqueta.getCor() != null && etiqueta.getCor().trim().length() > TAMANHO_MAXIMO_COR) {
+            throw new RegraNegocioException("A cor da etiqueta deve ter no máximo " + TAMANHO_MAXIMO_COR + " caracteres.");
         }
     }
 
@@ -92,7 +109,11 @@ public class EtiquetaService {
 
     public String trimOuNulo(String valor) {
         if (valor != null) {
-            return valor.trim();
+            String trimmed = valor.trim();
+            if (trimmed.isEmpty()) {
+                return null;
+            }
+            return trimmed;
         } else {
             return null;
         }

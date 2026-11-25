@@ -12,6 +12,9 @@ import java.util.List;
 @Service
 public class AreaProjetoService {
 
+    private static final int TAMANHO_MINIMO_NOME = 2;
+    private static final int TAMANHO_MAXIMO_NOME = 100;
+
     private final AreaProjetoRepository areaProjetoRepository;
     private final ProjetoRepository projetoRepository;
 
@@ -57,8 +60,18 @@ public class AreaProjetoService {
         if (areaProjeto == null) {
             throw new RegraNegocioException("Dados da área de projeto são obrigatórios.");
         }
-        if (areaProjeto.getNome() == null || areaProjeto.getNome().trim().isEmpty()) {
+        if (areaProjeto.getNome() == null) {
             throw new RegraNegocioException("O nome da área de projeto é obrigatório.");
+        }
+        String nomeTrimmed = areaProjeto.getNome().trim();
+        if (nomeTrimmed.isEmpty()) {
+            throw new RegraNegocioException("O nome da área de projeto não pode estar em branco.");
+        }
+        if (nomeTrimmed.length() < TAMANHO_MINIMO_NOME) {
+            throw new RegraNegocioException("O nome da área de projeto deve ter pelo menos " + TAMANHO_MINIMO_NOME + " caracteres.");
+        }
+        if (nomeTrimmed.length() > TAMANHO_MAXIMO_NOME) {
+            throw new RegraNegocioException("O nome da área de projeto deve ter no máximo " + TAMANHO_MAXIMO_NOME + " caracteres.");
         }
     }
 }

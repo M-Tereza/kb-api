@@ -12,6 +12,9 @@ import java.util.List;
 @Service
 public class CargoService {
 
+    private static final int TAMANHO_MINIMO_NOME = 2;
+    private static final int TAMANHO_MAXIMO_NOME = 100;
+
     private final CargoRepository cargoRepository;
     private final FuncionarioRepository funcionarioRepository;
 
@@ -57,8 +60,18 @@ public class CargoService {
         if (cargo == null) {
             throw new RegraNegocioException("Dados do cargo são obrigatórios.");
         }
-        if (cargo.getNome() == null || cargo.getNome().trim().isEmpty()) {
+        if (cargo.getNome() == null) {
             throw new RegraNegocioException("O nome do cargo é obrigatório.");
+        }
+        String nomeTrimmed = cargo.getNome().trim();
+        if (nomeTrimmed.isEmpty()) {
+            throw new RegraNegocioException("O nome do cargo não pode estar em branco.");
+        }
+        if (nomeTrimmed.length() < TAMANHO_MINIMO_NOME) {
+            throw new RegraNegocioException("O nome do cargo deve ter pelo menos " + TAMANHO_MINIMO_NOME + " caracteres.");
+        }
+        if (nomeTrimmed.length() > TAMANHO_MAXIMO_NOME) {
+            throw new RegraNegocioException("O nome do cargo deve ter no máximo " + TAMANHO_MAXIMO_NOME + " caracteres.");
         }
     }
 }

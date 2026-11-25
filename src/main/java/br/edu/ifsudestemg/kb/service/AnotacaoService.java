@@ -14,6 +14,9 @@ import java.util.List;
 @Service
 public class AnotacaoService {
 
+    private static final int TAMANHO_MINIMO_TEXTO = 2;
+    private static final int TAMANHO_MAXIMO_TEXTO = 500;
+
     private final AnotacaoRepository anotacaoRepository;
     private final TarefaRepository tarefaRepository;
 
@@ -71,8 +74,18 @@ public class AnotacaoService {
         if (anotacao == null) {
             throw new RegraNegocioException("Dados da anotação são obrigatórios.");
         }
-        if (anotacao.getTexto() == null || anotacao.getTexto().trim().isEmpty()) {
+        if (anotacao.getTexto() == null) {
             throw new RegraNegocioException("O texto da anotação é obrigatório.");
+        }
+        String textoTrimmed = anotacao.getTexto().trim();
+        if (textoTrimmed.isEmpty()) {
+            throw new RegraNegocioException("O texto da anotação não pode estar em branco.");
+        }
+        if (textoTrimmed.length() < TAMANHO_MINIMO_TEXTO) {
+            throw new RegraNegocioException("O texto da anotação deve ter pelo menos " + TAMANHO_MINIMO_TEXTO + " caracteres.");
+        }
+        if (textoTrimmed.length() > TAMANHO_MAXIMO_TEXTO) {
+            throw new RegraNegocioException("O texto da anotação deve ter no máximo " + TAMANHO_MAXIMO_TEXTO + " caracteres.");
         }
     }
 

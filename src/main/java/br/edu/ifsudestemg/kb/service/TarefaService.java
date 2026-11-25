@@ -19,6 +19,7 @@ import java.util.List;
 @Service
 public class TarefaService {
 
+    private static final int TAMANHO_MINIMO_TITULO = 3;
     private static final int TAMANHO_MAXIMO_TITULO = 120;
     private static final int TAMANHO_MAXIMO_DESCRICAO = 500;
 
@@ -113,6 +114,9 @@ public class TarefaService {
         if (tituloTrimmed.isEmpty()) {
             throw new RegraNegocioException("O título da tarefa não pode estar em branco.");
         }
+        if (tituloTrimmed.length() < TAMANHO_MINIMO_TITULO) {
+            throw new RegraNegocioException("O título da tarefa deve ter pelo menos " + TAMANHO_MINIMO_TITULO + " caracteres.");
+        }
         if (tituloTrimmed.length() > TAMANHO_MAXIMO_TITULO) {
             throw new RegraNegocioException("O título da tarefa deve ter no máximo " + TAMANHO_MAXIMO_TITULO + " caracteres.");
         }
@@ -124,9 +128,6 @@ public class TarefaService {
         }
         if (tarefa.getFase().getId() == null) {
             throw new RegraNegocioException("O identificador da fase da tarefa é obrigatório.");
-        }
-        if (tarefa.getPrioridade() != null && tarefa.getPrioridade().getId() == null) {
-            throw new RegraNegocioException("O identificador da prioridade da tarefa é obrigatório.");
         }
         if (tarefa.getDataCriacao() != null && tarefa.getDataLimite() != null
                 && tarefa.getDataLimite().isBefore(tarefa.getDataCriacao())) {

@@ -11,6 +11,9 @@ import java.util.List;
 @Service
 public class PrioridadeService {
 
+    private static final int TAMANHO_MINIMO_NOME = 2;
+    private static final int TAMANHO_MAXIMO_NOME = 60;
+
     private final PrioridadeRepository prioridadeRepository;
 
     public PrioridadeService(PrioridadeRepository prioridadeRepository) {
@@ -51,8 +54,18 @@ public class PrioridadeService {
         if (prioridade == null) {
             throw new RegraNegocioException("Dados da prioridade são obrigatórios.");
         }
-        if (prioridade.getNome() == null || prioridade.getNome().trim().isEmpty()) {
+        if (prioridade.getNome() == null) {
             throw new RegraNegocioException("O nome da prioridade é obrigatório.");
+        }
+        String nomeTrimmed = prioridade.getNome().trim();
+        if (nomeTrimmed.isEmpty()) {
+            throw new RegraNegocioException("O nome da prioridade não pode estar em branco.");
+        }
+        if (nomeTrimmed.length() < TAMANHO_MINIMO_NOME) {
+            throw new RegraNegocioException("O nome da prioridade deve ter pelo menos " + TAMANHO_MINIMO_NOME + " caracteres.");
+        }
+        if (nomeTrimmed.length() > TAMANHO_MAXIMO_NOME) {
+            throw new RegraNegocioException("O nome da prioridade deve ter no máximo " + TAMANHO_MAXIMO_NOME + " caracteres.");
         }
     }
 }
